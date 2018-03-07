@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="com.hp.dao.EmpMapper">
+ 	<resultMap id="EmpOneToOneDept" type="Emp" >
+ 		<id property="empno" column="empno"/>
+ 		<result property="ename" column="ename"/>
+ 		<result property="job" column="job"/>
+ 		<association property="dept" column="deptno" javaType="Dept">
+ 			<id property="deptno" column="deptno"/>
+ 			<result property="dname" column="dname"/>
+ 			<result property="loc" column="loc"/>			
+ 		</association>
+ 	</resultMap>
+ 	<resultMap id="DeptOneToManyEmp"  type="Dept" >
+ 		<id property="deptno" column="deptno"/>
+ 		<result property="dname" column="dname"/>
+ 		<result property="loc" column="loc"/>
+ 		<collection property="emps" ofType="Emp">
+ 			<id property="empno" column="empno"/>
+ 			<result property="ename" column="ename"/>
+ 			<result property="job" column="job"/>
+ 		</collection>
+ 	</resultMap>
+ 	<select id="selectEmp" resultType="Emp">
+ 		select empno,ename,job,deptno from emp
+ 	</select>
+ 	<select id="selectEmpByDeptno" parameterType="int" resultType="Emp" >
+ 		select empno,ename,deptno from emp where deptno = #{deptno}
+ 	</select>
+ 	<select id="selectEmpByJobAndDeptno" parameterType="hashmap" resultType="Emp">
+ 		select empno,ename,deptno from emp where job = #{job} and deptno = #{deptno}
+ 	</select>
+ 	<insert id="insertEmp" parameterType="Emp">
+ 		insert into emp(empno,ename,job,deptno) values(#{empno},#{ename},#{job},#{deptno})
+ 	</insert>
+ 	 <insert id="insertEmpBatch" parameterType="Emp">
+ 	 	insert into emp(empno,ename,job,deptno)
+ 	 	values
+ 	 	<foreach collection="list" item="e" separator=",">
+ 	 		 (#{e.empno},#{e.ename},#{e.job},#{e.deptno})
+ 	 	</foreach>
+ 	</insert>
+ 	
+ 	<delete id="deleteEmpByEmpno" parameterType="int">
+ 		delete from emp where empno = #{empno}
+ 	</delete>
+ 	<update id="updateEmpByEmpno" parameterType="Emp">
+ 		update emp set ename=#{ename},job=#{job},deptno=#{deptno} where empno=#{empno}
+ 	</update>
+ 	<select id="selectEmpAndDept" resultMap="EmpOneToOneDept">
+ 		select e.empno,e.ename,e.job,d.dname,d.loc from emp e inner join dept d on e.deptno = d.deptno
+ 	</select>
+ 	<select id="selectDeptAndEmp" resultMap="DeptOneToManyEmp" >
+ 		select d.deptno,d.dname,d.loc,e.empno,e.ename,e.job from emp e right join dept d on e.deptno = d.deptno
+ 	</select>
+ 	<select id="selectEmpByJob" resultType="Emp" parameterType="string">
+ 		select empno,ename,job,sal from emp where 1=1
+ 		<if test="_parameter">and job=#{_parameter}</if>
+ 	</select>
+ 	<select id="selectEmpByJobAndSal" parameterType="hashmap" resultType="Emp">
+ 		<!--
+ 		select empno,ename,job,sal from emp where 1=1
+ 		<choose>
+ 			<when test="sal>0">and sal > #{sal}</when>
+ 			<when test="job!=null">and job = #{job}</when>
+ 		</choose>
+ 		 -->
+ 		 select empno,ename,job,sal from emp
+ 		 <where>
+ 		 	<if test="job!=null">and job=#{job}</if>
+ 		 	<if test="sal>0">and sal>#{sal}</if>
+ 		 </where>
+ 	</select>
+ 	
+ 	
+ 	
+ 	
+ 	<select id="select1" resultType="Emp">
+ 		select * from emp where deptno = 30
+ 	</select>
+ 	<select id="select2" resultType="Emp">
+ 		select ename,empno,deptno from emp where job = "CLERK"
+ 	</select>
+ 	<select id="select3" resultType="Emp" >
+ 		select * from emp where  comm > sal
+ 	</select>
+ 	<select id="select4" resultType="Emp">
+ 		select * from emp where comm > 0.6*sal
+ 	</select>
+ 	<select id="select5" resultType="Emp">
+ 		select * from emp where deptno = 10 and job = "MANAGER" 
+ 	</select>
+ 	<select id="select6" resultType="Emp">
+ 		select * from emp where (deptno = 10 and job = "MANAGER") or (deptno = 20 and job = "CLERK")
+ 	</select>
+ 	<select id="select7" resultType="Emp">
+ 		select * from where (deptno = 10 and job = "MANAGER") or (deptno = 20 and job = "CLERK") or 
+					(select * from emp where sal >= 2000 and job not in ("MANAGER", "CLERK" ))
+ 	</select>
+ 	<select id="select8" resultType="String">
+ 		select distinct job from emp where comm!=0 or comm is not null
+ 	</select>
+ 	<select id="select9" resultType="Emp">
+ 		select * from emp where comm = 0 or comm &lt;= 100 or comm is null
+ 	</select>
+ 	<select id="select10" resultType="Emp">
+ 		select * from emp where hiredate = last_day(hiredate) - 2
+ 	</select>
+ 	<select id="select11" resultType="Emp">
+ 		select * from emp where year(hiredate) &lt; year(sysdate())-12
+ 	</select>
+ 	<select id="select12" resultType="String">
+ 		select CONCAT(UPPER(left(ename,1)), SUBSTRING(ename FROM 2 )) from emp 
+ 	</select>
+ 	<select id="select13" resultType="String">
+ 		select ename from emp where LENGTH(ename) = 5
+ 	</select>
+ 	 <select id="select14" resultType="String">
+ 		select ename from emp where ename not like '%R%'
+ 	</select>
+ 	<select id="select15" resultType="String">
+ 		 select left(ename,3) from emp 
+ 	</select>
+ 	 <select id="select16" resultType="String">
+ 		 select replace(ename,'A','a') from emp
+ 	</select>
+ 	 <select id="select17" resultType="hashmap">
+ 		select ename,hiredate from emp where (year(sysdate()) - year(hiredate)) > 10
+ 	</select>
+ 	 <select id="select18" resultType="Emp">
+ 		select * from emp order by ename
+ 	</select>
+ 	 <select id="select19" resultType="hashmap">
+ 		select ename,hiredate from emp order by hiredate 
+ 	</select>
+ 	 <select id="select20" resultType="hashmap">
+ 		select ename,job,sal from  emp order by job desc,sal asc
+ 	</select>
+ 	 <select id="select21" resultType="hashmap">
+ 		select ename,year(hiredate),month(hiredate) from emp order by month(hiredate),year(hiredate)
+ 	</select>
+ 	 <select id="select22" resultType="hashmap">
+ 		select ename,CONVERT( sal/30,signed) from emp
+ 	</select>
+ 	 <select id="select23" resultType="Emp">
+ 		select * from emp where month(hiredate) = 2
+ 	</select>
+ 	 <select id="select24" resultType="hashmap">
+ 		SELECT ename,TIMESTAMPDIFF(DAY,hiredate,CURDATE()) FROM emp
+ 	</select>
+ 	 <select id="select25" resultType="String">
+ 		select ename from emp where ename like '%A%'
+ 	</select>
+ 	 <select id="select26" resultType="hashmap">
+ 		select ename,CONCAT(TIMESTAMPDIFF(YEAR,hiredate,CURDATE()),"年",TIMESTAMPDIFF(MONTH,hiredate,CURDATE()),"月",
+ 					TIMESTAMPDIFF(DAY,hiredate,CURDATE()),"日")AS "工作年限" from emp
+ 	</select>
+ 	 <select id="select27" resultType="String">
+ 		select dname from dept where deptno in(select deptno from emp); 
+ 	</select>
+ 	 <select id="select28" resultType="Emp">
+ 		select * from emp  where sal > (select sal from emp where ename = 'SMITH')
+ 	</select>
+ 	 <select id="select29" resultType="hashmap">
+ 		select a.ename,(select ename from emp b where b.empno=a.mgr) as boss_name from emp a
+ 	</select>
+ </mapper>
